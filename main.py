@@ -3,9 +3,9 @@ hike-gpx-analyzer-skill · 主入口
 Author: Vijay
 """
 import sys
-from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis,compute_cumulative_km,extract_waypoints,find_service_points
+from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis,compute_cumulative_km,extract_waypoints,find_service_points,find_meeting_point
 from weather_provider import fetch_point_weather
-from report_builder import build_markdown_report
+from report_builder import build_report
 from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SEGMENT_COUNT,SLOPE_SAMPLE_STEP,TOILET_KEYWORDS,SUPPLY_KEYWORDS
 from datetime import datetime,timedelta
 
@@ -20,7 +20,9 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
     key_points=sample_way_points(all_points,SAMPLE_KEY_POINT_COUNT)
     slope_segs=segment_slope_analysis(all_points,SEGMENT_COUNT,SLOPE_SAMPLE_STEP)
     cum_km=compute_cumulative_km(all_points)
-    service_points=find_service_points(extract_waypoints(gpx),all_points,cum_km,TOILET_KEYWORDS,SUPPLY_KEYWORDS)
+    waypoints=extract_waypoints(gpx)
+    service_points=find_service_points(waypoints,all_points,cum_km,TOILET_KEYWORDS,SUPPLY_KEYWORDS)
+    meeting_point=find_meeting_point(waypoints,all_points[0])
     total_km=stat["total_distance_km"]
 
     time_est={
@@ -30,14 +32,15 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
     }
 
     weather_result=[]
+    n=len(key_points)
     for idx,pt in enumerate(key_points):
-        progress_ratio=(idx+1)/len(key_points)
+        progress_ratio=idx/(n-1) if n>1 else 0
         travel_h=total_km*progress_ratio/SPEED_NORMAL_KMH
         arrive_dt=start_datetime+timedelta(hours=travel_h)
         w_data=fetch_point_weather(pt["lat"],pt["lon"],arrive_dt)
         weather_result.append(w_data)
 
-    md_output=build_markdown_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime,service_points)
+    md_output=build_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime,service_points,meeting_point)
     print(md_output)
     return {"markdown":md_output,"statistic":stat}
 

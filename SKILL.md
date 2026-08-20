@@ -1,6 +1,6 @@
 ---
 name: hike-gpx-analyzer
-description: 徒步GPX轨迹分析：导入GPX文件自动生成专业徒步出行分析Markdown报告，含路线总览KPI（里程/爬升/海拔/预估用时/难度）、沿途气象预估、分段坡度路况、卫生间与补给点、风险提示与装备建议。当用户提供GPX文件并要求分析徒步路线、生成徒步/出行报告、评估路线难度时使用。Use when the user provides a GPX file and asks for hiking route analysis or a trip planning report.
+description: 徒步GPX轨迹分析：导入GPX文件自动生成专业徒步出行分析纯文本报告，含路线总览（里程/爬升/海拔/集合点/预估用时/难度百分比）、沿途气象预估、分段坡度路况、卫生间与补给点、风险提示与装备建议。当用户提供GPX文件并要求分析徒步路线、生成徒步/出行报告、评估路线难度时使用。Use when the user provides a GPX file and asks for hiking route analysis or a trip planning report.
 ---
 
 # 徒步GPX轨迹出行分析
@@ -21,7 +21,7 @@ description: 徒步GPX轨迹分析：导入GPX文件自动生成专业徒步出�
 
 ## 输出规范（必须遵守）
 
-将 stdout 的报告**原文完整**包裹在 ```markdown 代码块中直接输出到聊天界面，供用户一键复制：
+将 stdout 的报告**原文完整**包裹在代码块中直接输出到聊天界面，供用户一键复制（报告为纯文本格式，不含 Markdown 标记）：
 
 - **强制直接输出到聊天界面**：任何情况下都不将报告写入、保存或生成单独的文件，一律以聊天消息中的代码块交付；用户要求文件时，也只在聊天界面输出代码块让其自行复制
 - 报告内容一字不改、不截断、不增删——报告本身已是最终交付格式
