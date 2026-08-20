@@ -3,7 +3,7 @@ hike-gpx-analyzer-skill · 主入口
 Author: Vijay
 """
 import sys
-from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis,compute_cumulative_km,extract_waypoints,find_service_points,find_meeting_point
+from gpx_engine import load_track_file,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis,compute_cumulative_km,extract_waypoints,find_service_points,find_meeting_point
 from weather_provider import fetch_point_weather
 from report_builder import build_report
 from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SEGMENT_COUNT,SLOPE_SAMPLE_STEP,TOILET_KEYWORDS,SUPPLY_KEYWORDS,INVALID_MEETING_KEYWORDS,INVALID_MEETING_EXACT
@@ -14,13 +14,13 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
         tomorrow=datetime.now().date()+timedelta(days=1)
         start_datetime=datetime.combine(tomorrow,datetime.min.time())+timedelta(hours=DEFAULT_START_HOUR)
 
-    gpx=load_gpx(gpx_file_path)
-    stat=get_basic_statistic(gpx)
-    all_points=extract_all_track_points(gpx)
+    track=load_track_file(gpx_file_path)
+    stat=get_basic_statistic(track)
+    all_points=extract_all_track_points(track)
     key_points=sample_way_points(all_points,SAMPLE_KEY_POINT_COUNT)
     slope_segs=segment_slope_analysis(all_points,SEGMENT_COUNT,SLOPE_SAMPLE_STEP)
     cum_km=compute_cumulative_km(all_points)
-    waypoints=extract_waypoints(gpx)
+    waypoints=extract_waypoints(track)
     service_points=find_service_points(waypoints,all_points,cum_km,TOILET_KEYWORDS,SUPPLY_KEYWORDS)
     meeting_point=find_meeting_point(waypoints,all_points[0],INVALID_MEETING_KEYWORDS,INVALID_MEETING_EXACT)
     total_km=stat["total_distance_km"]

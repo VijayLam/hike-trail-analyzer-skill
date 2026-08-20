@@ -26,7 +26,16 @@
       "Bash(git reset *)",
       "Bash(git restore *)",
       "Bash(.venv/bin/python main.py './2025-03-16 1051广州天河区-1787210231476.gpx' '火炉山徒步线')",
-      "Bash(git commit -m 'feat: 难度改用规范公式（体力分×坡度修正×海拔修正×0.8＋技术分×0.2，含安全修正与top3因素，报告仅展示结果两行），集合点过滤方向词与设施泛称后统一待定 *)"
+      "Bash(git commit -m 'feat: 难度改用规范公式（体力分×坡度修正×海拔修正×0.8＋技术分×0.2，含安全修正与top3因素，报告仅展示结果两行），集合点过滤方向词与设施泛称后统一待定 *)",
+      "Bash(printf -- '\\\\n**补充（难度公式与集合点）**：按 Vijay 规范公式重写难度评估（基础体力分 MIN\\(100,√\\(2×mi×ft\\)÷1.2\\)×坡度修正×海拔修正×0.8＋技术分×0.2，T1-T6按最陡段坡度推断可覆盖，安全修正技术分≥80保底75/≥90保底85，六级难度），报告只展示难度分与top3因素两行，计算过程保留在assess_difficulty可展开；集合点过滤方向词/设施泛称/通用词（包含+整词两级），无效统一「待定+起点坐标」。已提交 git（e6171ec）\\\\n' >> /Users/vinc/AI_Roland/对话历史.md)",
+      "Read(//Users/vinc/.claude/skills/human-tone/references/**)",
+      "Bash(git commit -m 'feat: 报告标题改为「路线名，徒步路书」格式，页脚措辞同步 *)",
+      "Bash(printf -- '\\\\n**补充（路书定稿）**：报告标题最终定为「路线名，徒步路书」格式（页面 c422785 表格全角对齐、e6171ec 难度规范公式、0c878bc 路书标题）；另应 Vijay 要求基于会话素材完成公众号/小红书/抖音图文三篇推广文案初稿（暂不发布，存于会话记录）\\\\n' >> /Users/vinc/AI_Roland/对话历史.md)",
+      "Bash(.venv/bin/python main.py './2025-03-16 1051广州天河区-1787210231476.gpx' '火炉山对比')",
+      "Bash(.venv/bin/python main.py /tmp/test_hhs.kml '火炉山对比')",
+      "Bash(.venv/bin/python main.py /tmp/test_hhs.kmz '火炉山对比')",
+      "Bash(.venv/bin/python main.py /tmp/test_hhs.kml '火炉山KML测试')",
+      "Bash(git commit -m 'feat: 轨迹格式支持GPX/KML/KMZ三种，按扩展名自动识别，KML标注点接入补给与集合点识别 *)"
     ],
     "additionalDirectories": [
       "/Users/vinc/AI_Roland"

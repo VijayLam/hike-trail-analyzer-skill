@@ -1,6 +1,6 @@
 ---
 name: hike-gpx-analyzer
-description: 徒步GPX轨迹分析：导入GPX文件自动生成专业徒步出行分析纯文本报告，含路线总览（里程/爬升/海拔/集合点/预估用时/难度百分比）、沿途气象预估、分段坡度路况、卫生间与补给点、风险提示与装备建议。当用户提供GPX文件并要求分析徒步路线、生成徒步/出行报告、评估路线难度时使用。Use when the user provides a GPX file and asks for hiking route analysis or a trip planning report.
+description: 徒步轨迹分析：导入GPX/KML/KMZ轨迹文件自动生成专业徒步路书（纯文本），含路线总览（里程/爬升/海拔/集合点/预估用时/难度百分比）、沿途气象预估、分段坡度路况、卫生间与补给点、风险提示与装备建议。当用户提供轨迹文件并要求分析徒步路线、生成徒步路书/出行攻略、评估路线难度时使用。Use when the user provides a GPX/KML/KMZ file and asks for hiking route analysis or a trip planning report.
 ---
 
 # 徒步GPX轨迹出行分析
@@ -10,8 +10,10 @@ description: 徒步GPX轨迹分析：导入GPX文件自动生成专业徒步出�
 1. 在项目根目录运行分析（依赖已装在 .venv；缺失时先 `pip install -r requirements.txt`）：
 
 ```bash
-.venv/bin/python main.py <GPX文件路径> "<路线名称>" [YYYY-MM-DD] [HH:MM]
+.venv/bin/python main.py <轨迹文件路径.gpx/.kml/.kmz> "<路线名称>" [YYYY-MM-DD] [HH:MM]
 ```
+
+- 轨迹格式：GPX / KML / KMZ 三种均支持；KML 无时间信息时统计口径为全程累计（与 GPX 的移动段过滤略有差异）；无海拔的二维 KML 会导致坡度与爬升为 0，建议用户使用带海拔的轨迹
 
 - 路线名称：用户指定；未指定时从GPX文件名推断，推断困难时询问用户
 - 出发日期与时刻：可选，默认明天 09:00

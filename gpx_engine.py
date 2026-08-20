@@ -1,17 +1,117 @@
 """
-hike-gpx-analyzer-skill · GPX解析与坡度分析核心引擎
+hike-gpx-analyzer-skill · 轨迹解析与坡度分析核心引擎（支持GPX/KML/KMZ）
 Author: Vijay
 """
+import zipfile
+import xml.etree.ElementTree as ET
 import gpxpy
 import gpxpy.gpx
 from bisect import bisect_left
 from gpxpy.geo import haversine_distance
 from typing import List, Dict
 
+KML_NS = {"kml": "http://www.opengis.net/kml/2.2"}
+
 def load_gpx(file_path: str):
     with open(file_path, "r", encoding="utf-8") as f:
         gpx = gpxpy.parse(f)
     return gpx
+
+def parse_kml_text(kml_text: str):
+    root = ET.fromstring(kml_text)
+    track_points = []
+    for line_string in root.iter("{http://www.opengis.net/kml/2.2}LineString"):
+        coords = line_string.find("kml:coordinates", KML_NS)
+        if coords is None or not coords.text:
+            continue
+        for tok in coords.text.split():
+            parts = tok.split(",")
+            if len(parts) >= 2:
+                ele = float(parts[2]) if len(parts) >= 3 and parts[2] else None
+                track_points.append({"lat": float(parts[1]), "lon": float(parts[0]), "elevation": ele, "time": None})
+    for track in root.iter("{http://www.google.com/kml/ext/2.2}Track"):
+        for coord in track.iter("{http://www.google.com/kml/ext/2.2}coord"):
+            parts = coord.text.split()
+            if len(parts) >= 2:
+                ele = float(parts[2]) if len(parts) >= 3 and parts[2] else None
+                track_points.append({"lat": float(parts[1]), "lon": float(parts[0]), "elevation": ele, "time": None})
+    waypoints = []
+    for placemark in root.iter("{http://www.opengis.net/kml/2.2}Placemark"):
+        name_el = placemark.find("kml:name", KML_NS)
+        point = placemark.find("kml:Point", KML_NS)
+        if point is None:
+            continue
+        coords = point.find("kml:coordinates", KML_NS)
+        if coords is None or not coords.text or name_el is None or not name_el.text:
+            continue
+        tok = coords.text.split()[0].split(",")
+        if len(tok) >= 2:
+            waypoints.append({"name": name_el.text.strip(), "lat": float(tok[1]), "lon": float(tok[0])})
+    return track_points, waypoints
+
+class _GpxCompatible:
+    def __init__(self, track_points: List[Dict], waypoints: List[Dict]):
+        class _P:
+            def __init__(self, p):
+                self.latitude = p["lat"]
+                self.longitude = p["lon"]
+                self.elevation = p["elevation"]
+                self.time = p.get("time")
+        class _Seg:
+            points = [_P(p) for p in track_points]
+        class _Track:
+            segments = [_Seg()]
+        class _Wpt:
+            def __init__(self, w):
+                self.name = w["name"]
+                self.latitude = w["lat"]
+                self.longitude = w["lon"]
+        self.tracks = [_Track()]
+        self.waypoints = [_Wpt(w) for w in waypoints]
+        pts = _Seg.points
+        dist = sum(haversine_distance(a.latitude, a.longitude, b.latitude, b.longitude) for a, b in zip(pts, pts[1:]))
+        up = down = 0.0
+        for a, b in zip(pts, pts[1:]):
+            if a.elevation is None or b.elevation is None:
+                continue
+            delta = b.elevation - a.elevation
+            if delta > 0:
+                up += delta
+            else:
+                down -= delta
+        elevations = [p.elevation for p in pts if p.elevation is not None]
+        class _Moving:
+            moving_distance = dist
+        class _UpDown:
+            uphill = up
+            downhill = down
+        class _Extremes:
+            maximum = max(elevations) if elevations else None
+            minimum = min(elevations) if elevations else None
+        self._moving = _Moving()
+        self._updown = _UpDown()
+        self._extremes = _Extremes()
+    def get_moving_data(self):
+        return self._moving
+    def get_uphill_downhill(self):
+        return self._updown
+    def get_elevation_extremes(self):
+        return self._extremes
+
+def load_track_file(file_path: str):
+    lower = file_path.lower()
+    if lower.endswith(".kmz"):
+        with zipfile.ZipFile(file_path) as z:
+            kml_names = sorted([n for n in z.namelist() if n.lower().endswith(".kml")],
+                               key=lambda n: (not n.lower().endswith("doc.kml"), len(n)))
+            with z.open(kml_names[0]) as f:
+                track_points, waypoints = parse_kml_text(f.read().decode("utf-8", errors="ignore"))
+        return _GpxCompatible(track_points, waypoints)
+    if lower.endswith(".kml"):
+        with open(file_path, "r", encoding="utf-8") as f:
+            track_points, waypoints = parse_kml_text(f.read())
+        return _GpxCompatible(track_points, waypoints)
+    return load_gpx(file_path)
 
 def extract_all_track_points(gpx) -> List[Dict]:
     point_list = []
