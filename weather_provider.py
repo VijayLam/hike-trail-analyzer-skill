@@ -4,15 +4,17 @@ Author: Vijay
 """
 import sys
 import requests
+from urllib.parse import quote
 from datetime import datetime
 from typing import Optional, Dict
 
 def fetch_point_weather(lat: float, lon: float, target_time: datetime) -> Optional[Dict]:
+    tz = quote(f"UTC{round(lon / 15):+d}")
     base_url = (
         f"https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
         f"&hourly=temperature_2m,precipitation_probability,weather_code"
-        f"&timezone=Asia/Shanghai"
+        f"&timezone={tz}"
     )
     try:
         resp = requests.get(base_url, timeout=15)

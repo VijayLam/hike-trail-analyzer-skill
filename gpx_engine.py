@@ -166,18 +166,20 @@ def extract_waypoints(gpx) -> List[Dict]:
         result.append({"name":name,"lat":w.latitude,"lon":w.longitude})
     return result
 
-def is_valid_meeting_name(name:str,invalid_keywords:List[str],invalid_exact:List[str]):
+def is_valid_meeting_name(name:str,invalid_keywords:List[str],invalid_exact:List[str],place_chars:str):
     if len(name)<2 or name in invalid_exact:
         return False
     lower=name.lower()
-    return not any(kw in lower for kw in invalid_keywords)
+    if any(kw in lower for kw in invalid_keywords):
+        return False
+    return any(c in place_chars for c in name)
 
-def find_meeting_point(waypoints: List[Dict], start_point: Dict, invalid_keywords: List[str], invalid_exact: List[str], max_distance_m: float = 500):
+def find_meeting_point(waypoints: List[Dict], start_point: Dict, invalid_keywords: List[str], invalid_exact: List[str], place_chars: str, max_distance_m: float = 500):
     best_name=None
     best_d=max_distance_m
     for w in waypoints:
         d=haversine_distance(w["lat"],w["lon"],start_point["lat"],start_point["lon"])
-        if d<best_d and is_valid_meeting_name(w["name"],invalid_keywords,invalid_exact):
+        if d<best_d and is_valid_meeting_name(w["name"],invalid_keywords,invalid_exact,place_chars):
             best_d=d
             best_name=w["name"]
     coord=f"（{start_point['lat']:.5f}, {start_point['lon']:.5f}）"

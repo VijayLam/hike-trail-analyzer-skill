@@ -35,7 +35,11 @@
       "Bash(.venv/bin/python main.py /tmp/test_hhs.kml '火炉山对比')",
       "Bash(.venv/bin/python main.py /tmp/test_hhs.kmz '火炉山对比')",
       "Bash(.venv/bin/python main.py /tmp/test_hhs.kml '火炉山KML测试')",
-      "Bash(git commit -m 'feat: 轨迹格式支持GPX/KML/KMZ三种，按扩展名自动识别，KML标注点接入补给与集合点识别 *)"
+      "Bash(git commit -m 'feat: 轨迹格式支持GPX/KML/KMZ三种，按扩展名自动识别，KML标注点接入补给与集合点识别 *)",
+      "Bash(printf -- '\\\\n**补充（多格式支持）**：实现 GPX/KML/KMZ 三种轨迹格式统一入口（load_track_file 按扩展名识别，KML 解析 LineString/gx:Track/Placemark，KMZ 解压取 doc.kml，_GpxCompatible 兼容层无缝接入坡度/补给/集合点全流程），三种格式实测通过；确认 skill 用户使用方式为「丢轨迹文件→说分析→聊天界面代码块路书」零命令行。已提交 git（2459397）\\\\n' >> /Users/vinc/AI_Roland/对话历史.md)",
+      "Bash(.venv/bin/python main.py '/Users/vinc/hike-gpx-analyzer-skill/广州白云山画凤凰-1787238268506.kml' '白云山画凤凰线')",
+      "Bash(.venv/bin/python main.py '/Users/vinc/hike-gpx-analyzer-skill/广州白云山画兔-1787238331717.kmz' '白云山画兔线')",
+      "Bash(git commit -m 'feat: 集合点过滤加正向地点校验（双保险防方向性描述漏网），天气时区按轨迹经度自动估算支持境外轨迹，路书气象引言保持原样不标注来源 *)"
     ],
     "additionalDirectories": [
       "/Users/vinc/AI_Roland"
