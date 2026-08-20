@@ -2,7 +2,37 @@
 hike-gpx-analyzer-skill · 纯文本专业报告生成器
 Author: Vijay
 """
+import unicodedata
 from datetime import datetime
+
+def _display_width(text:str):
+    return sum(2 if unicodedata.east_asian_width(c) in "FW" else 1 for c in text)
+
+def _to_fullwidth(text:str):
+    result=[]
+    for c in text:
+        code=ord(c)
+        if c==" ":
+            result.append("　")
+        elif 33<=code<=126:
+            result.append(chr(code+0xFEE0))
+        else:
+            result.append(c)
+    return "".join(result)
+
+def render_table(headers:list,rows:list):
+    all_rows=[[_to_fullwidth(c) for c in row] for row in [headers]+rows]
+    widths=[max(_display_width(r[i]) for r in all_rows) for i in range(len(headers))]
+    last=len(widths)-1
+    def render_row(cells):
+        parts=[]
+        for i,c in enumerate(cells):
+            if i==last:
+                parts.append(c)
+            else:
+                parts.append(c+"　"*((widths[i]+2-_display_width(c))//2))
+        return "".join(parts)
+    return [render_row(r) for r in all_rows]
 
 def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_list:list,time_estimate:dict,start_datetime:datetime=None,service_points:list=None,meeting_point:str=None):
     date_text=None
@@ -18,8 +48,11 @@ def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_li
     lines.append("GPX轨迹自动分析 · 出行规划参考\n")
 
     lines.append("📈路线总览")
-    lines.append("| 全程里程 | 累计爬升 | 累计下降 | 最高海拔 | 最低海拔 |")
-    lines.append(f"| {stat['total_distance_km']} km | {stat['uphill_m']} m | {stat['downhill_m']} m | {stat['max_elevation']} m | {stat['min_elevation']} m |")
+    lines.append(f"全程里程：{stat['total_distance_km']} km")
+    lines.append(f"累计爬升：{stat['uphill_m']} m")
+    lines.append(f"累计下降：{stat['downhill_m']} m")
+    lines.append(f"最高海拔：{stat['max_elevation']} m")
+    lines.append(f"最低海拔：{stat['min_elevation']} m")
     lines.append(f"⏱预估用时：休闲 {time_estimate['leisure']} ｜ 正常 {time_estimate['normal']} ｜ 较快 {time_estimate['fast']}")
     diff_pct,level_text,diff_formula=get_difficulty_text(stat["total_distance_km"],stat["uphill_m"])
     lines.append(f"📊整体难度：{diff_pct}% ｜ {level_text}")
@@ -27,25 +60,19 @@ def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_li
 
     lines.append("🌤沿途气象预估")
     lines.append("按预估到达时刻逐点查询，未指定出行日期时默认明天出发，可自定义出发时间重新测算；山区小气候变化较快，仅作规划参考\n")
-    lines.append("| 点位位置 | 预估到达时刻 | 天气状况 | 降雨概率 | 出行提示 |")
     wp_labels=["起点","中途位置","海拔高点","关键路径点","终点"]
-    for idx,row in enumerate(waypoint_weather):
-        if row:
-            lines.append(f"| {wp_labels[idx]} | {row['arrive_hm']} | {row['weather']} | {row['rain_prob']} | {row['risk']} |")
+    weather_rows=[[wp_labels[idx],row['arrive_hm'],row['weather'],row['rain_prob'],row['risk']] for idx,row in enumerate(waypoint_weather) if row]
+    lines+=render_table(["点位位置","预估到达时刻","天气状况","降雨概率","出行提示"],weather_rows)
     lines.append("📌气象综合建议：出行前再次查看当地实时气象，山区天气变化较快，爬升阶段合理分配体力，定时补充饮用水，做好防晒。\n")
 
     lines.append("🛤分段坡度路况")
     lines.append(f"按全程里程等分{len(slope_segment_list)}段，坡度为段内最陡处推算值，不等于实地路况\n")
-    lines.append("| 里程区间 | 最陡坡度 | 路况提示 |")
-    for seg in slope_segment_list:
-        lines.append(f"| {seg['range']} | {seg['slope']}% | {seg['desc']} |")
+    lines+=render_table(["里程区间","最陡坡度","路况提示"],[[seg['range'],f"{seg['slope']}%",seg['desc']] for seg in slope_segment_list])
     lines.append("")
 
     lines.append("🚻沿途卫生间与补给点")
     if service_points:
-        lines.append("| 大约位置 | 点位 | 类型 |")
-        for s in service_points:
-            lines.append(f"| 约{s['km']}km | {s['name']} | {s['type']} |")
+        lines+=render_table(["大约位置","点位","类型"],[[f"约{s['km']}km",s['name'],s['type']] for s in service_points])
         t_count=len([s for s in service_points if s["type"]=="🚻卫生间"])
         s_count=len([s for s in service_points if s["type"]=="🏪补给"])
         lines.append(f"📌汇总：卫生间共 {t_count} 处 ｜ 补给点共 {s_count} 处")

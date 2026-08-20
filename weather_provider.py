@@ -54,8 +54,8 @@ def map_weather_code(code: int):
 
 def build_risk_note(rain_prob:int):
     if rain_prob >= 60:
-        return "降雨可能性高，土路湿滑，务必携带防雨装备，谨慎行进"
+        return "降雨概率高，防雨防滑慢行"
     elif rain_prob >=30:
-        return "存在局部降雨概率，建议备好雨具，留意天气变化"
+        return "或有降雨，建议备好雨具"
     else:
-        return "气象条件整体平稳，正常行进"
+        return "气象平稳，正常行进"
