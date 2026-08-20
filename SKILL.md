@@ -1,9 +1,9 @@
 ---
-name: hike-gpx-analyzer
+name: hike-trail-analyzer
 description: 徒步轨迹分析：导入GPX/KML/KMZ轨迹文件自动生成专业徒步路书（纯文本），含路线总览（里程/爬升/海拔/集合点/预估用时/难度百分比）、沿途气象预估、分段坡度路况、卫生间与补给点、风险提示与装备建议。当用户提供轨迹文件并要求分析徒步路线、生成徒步路书/出行攻略、评估路线难度时使用。Use when the user provides a GPX/KML/KMZ file and asks for hiking route analysis or a trip planning report.
 ---
 
-# 徒步GPX轨迹出行分析
+# 徒步轨迹出行分析
 
 ## 工作流程
 

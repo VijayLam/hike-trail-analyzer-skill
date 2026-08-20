@@ -1,5 +1,5 @@
 """
-hike-gpx-analyzer-skill · open-meteo气象数据模块
+hike-trail-analyzer · open-meteo气象数据模块
 Author: Vijay
 """
 import sys

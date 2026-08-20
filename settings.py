@@ -1,5 +1,5 @@
 """
-hike-gpx-analyzer-skill · 全局配置
+hike-trail-analyzer · 全局配置
 Author: Vijay
 """
 # 徒步全局配置参数，可外部传入覆盖

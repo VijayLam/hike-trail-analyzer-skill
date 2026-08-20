@@ -1,5 +1,5 @@
 """
-hike-gpx-analyzer-skill · 轨迹解析与坡度分析核心引擎（支持GPX/KML/KMZ）
+hike-trail-analyzer · 轨迹解析与坡度分析核心引擎（支持GPX/KML/KMZ）
 Author: Vijay
 """
 import zipfile

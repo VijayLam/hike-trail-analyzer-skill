@@ -1,5 +1,5 @@
 """
-hike-gpx-analyzer-skill · 纯文本专业报告生成器
+hike-trail-analyzer · 纯文本专业路书生成器
 Author: Vijay
 """
 import math
@@ -176,6 +176,6 @@ def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_li
     lines.append("⚠免责声明")
     lines.append("1. 路况结果仅由GPX轨迹海拔数据自动推算，无法识别实地路面情况，只可作为出行规划参考。")
     lines.append("2. 气象预报存在误差，山区局部天气多变，请出行前核实最新气象预警，注意户外出行安全。")
-    lines.append("📝本路书由 Vijay 开发的 hike-gpx-analyzer-skill 自动生成")
+    lines.append("📝本路书由 Vijay 开发的 hike-trail-analyzer 自动生成")
 
     return "\n".join(lines)
