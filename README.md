@@ -13,7 +13,7 @@ pip install -r requirements.txt
 2. 将gpx轨迹文件放入sample目录，命名 trace.gpx
 3. 运行
 python main.py
-报告输出位置 output/hike_report.md
+报告直接在终端完整输出，可直接复制使用；未指定出发时间时默认明天出发，报告内出行日期加粗标注
 
 ## 调用方式
 外部可调用 run_hike_analysis(gpx路径,路线名称,可选自定义出发时间)

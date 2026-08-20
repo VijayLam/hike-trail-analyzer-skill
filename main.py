@@ -7,12 +7,11 @@ from weather_provider import fetch_point_weather
 from report_builder import build_markdown_report
 from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SLOPE_INTERVAL_STEP
 from datetime import datetime,timedelta
-import os
 
 def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_datetime:datetime=None):
     if start_datetime is None:
-        today=datetime.now().date()
-        start_datetime=datetime.combine(today,datetime.min.time())+timedelta(hours=DEFAULT_START_HOUR)
+        tomorrow=datetime.now().date()+timedelta(days=1)
+        start_datetime=datetime.combine(tomorrow,datetime.min.time())+timedelta(hours=DEFAULT_START_HOUR)
 
     gpx=load_gpx(gpx_file_path)
     stat=get_basic_statistic(gpx)
@@ -35,12 +34,9 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
         w_data=fetch_point_weather(pt["lat"],pt["lon"],arrive_dt)
         weather_result.append(w_data)
 
-    md_output=build_markdown_report(route_name,stat,weather_result,slope_segs,time_est)
-    os.makedirs("output",exist_ok=True)
-    out_path=os.path.join("output","hike_report.md")
-    with open(out_path,"w",encoding="utf-8") as f:
-        f.write(md_output)
-    print(f"✅分析报告已输出至 {out_path}")
+    md_output=build_markdown_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime)
+    print(md_output)
+    print("\n✅以上为完整分析报告，可直接复制使用")
     return {"markdown":md_output,"statistic":stat}
 
 if __name__=="__main__":

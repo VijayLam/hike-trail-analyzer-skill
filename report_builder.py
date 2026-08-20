@@ -2,9 +2,17 @@
 hike-gpx-analyzer-skill · Markdown专业报告生成器
 Author: Vijay
 """
-def build_markdown_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_list:list,time_estimate:dict):
+from datetime import datetime
+
+def build_markdown_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_list:list,time_estimate:dict,start_datetime:datetime=None):
+    date_text=None
+    if start_datetime is not None:
+        week_day="周"+"一二三四五六日"[start_datetime.weekday()]
+        date_text=f"{start_datetime.strftime('%Y-%m-%d')}（{week_day}）{start_datetime.strftime('%H:%M')}"
     lines=[]
     lines.append(f"# 🥾徒步轨迹出行分析报告")
+    if date_text:
+        lines.append(f"\n**📅 出行日期：{date_text} 出发**")
     lines.append(f"> GPX轨迹自动分析 · 出行规划参考\n")
 
     lines.append("## 📈路线基础概况")
@@ -28,7 +36,9 @@ def build_markdown_report(route_name:str,stat:dict,waypoint_weather:list,slope_s
 
     lines.append("---\n")
     lines.append("## 🌤沿途关键点位气象预估（按预估到达时刻查询）")
-    lines.append("> 默认出发时间：09:00，可自定义出发时间重新测算")
+    if date_text:
+        lines.append(f"> **📅 出行日期：{date_text} 出发**，气象按预估到达时刻逐点查询")
+    lines.append("> 未指定出行日期时默认明天出发，可自定义出发时间重新测算")
     lines.append("> 气象数据来源于公开逐小时预报，山区小气候变化较快，仅作为规划参考\n")
     lines.append("| 点位位置 | 预估到达时刻 | 天气状况 | 降雨概率 | 出行提示 |")
     lines.append("|---|---|---|---|---|")
