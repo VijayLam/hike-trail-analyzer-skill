@@ -5,7 +5,7 @@ Author: Vijay
 from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis
 from weather_provider import fetch_point_weather
 from report_builder import build_markdown_report
-from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SLOPE_INTERVAL_STEP
+from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SEGMENT_COUNT,SLOPE_SAMPLE_STEP
 from datetime import datetime,timedelta
 
 def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_datetime:datetime=None):
@@ -17,7 +17,7 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
     stat=get_basic_statistic(gpx)
     all_points=extract_all_track_points(gpx)
     key_points=sample_way_points(all_points,SAMPLE_KEY_POINT_COUNT)
-    slope_segs=segment_slope_analysis(all_points,SLOPE_INTERVAL_STEP)
+    slope_segs=segment_slope_analysis(all_points,SEGMENT_COUNT,SLOPE_SAMPLE_STEP)
     total_km=stat["total_distance_km"]
 
     time_est={

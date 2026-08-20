@@ -49,22 +49,32 @@ def sample_way_points(points: List[Dict], sample_count: int):
             break
     return result
 
-def segment_slope_analysis(points: List[Dict], interval: int):
+def segment_slope_analysis(points: List[Dict], segment_count: int, sample_step: int):
+    total = len(points)
+    if total < 2:
+        return []
+    step = total / segment_count
     output = []
-    for i in range(interval, len(points), interval):
-        p0 = points[i - interval]
-        p1 = points[i]
-        delta_h = p1["elevation"] - p0["elevation"]
-        dist_m = haversine_distance(p0["lat"], p0["lon"], p1["lat"], p1["lon"])
-        if dist_m <= 0:
-            slope_percent = 0
-        else:
-            slope_percent = round((delta_h / dist_m) * 100, 2)
-        desc = get_slope_description(slope_percent)
+    for i in range(1, segment_count + 1):
+        seg_start = min(int((i - 1) * step), total - 1)
+        seg_end = min(int(i * step), total - 1)
+        max_slope = 0.0
+        for j in range(seg_start, seg_end, sample_step):
+            p0 = points[j]
+            p1 = points[min(j + sample_step, seg_end)]
+            if p1 is p0:
+                continue
+            delta_h = p1["elevation"] - p0["elevation"]
+            dist_m = haversine_distance(p0["lat"], p0["lon"], p1["lat"], p1["lon"])
+            if dist_m <= 0:
+                continue
+            slope = delta_h / dist_m * 100
+            if abs(slope) > abs(max_slope):
+                max_slope = slope
         output.append({
-            "index": i,
-            "slope": slope_percent,
-            "desc": desc
+            "segment": i,
+            "slope": round(max_slope, 2),
+            "desc": get_slope_description(max_slope)
         })
     return output
 

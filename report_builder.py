@@ -51,11 +51,11 @@ def build_markdown_report(route_name:str,stat:dict,waypoint_weather:list,slope_s
 
     lines.append("---\n")
     lines.append("## 🛤分段路况坡度参考（轨迹数据推算，仅供参考）")
-    lines.append("> 根据轨迹海拔变化推算坡度情况，不等于实地路况\n")
-    lines.append("| 轨迹段序号 | 推算坡度 | 路况提示 |")
+    lines.append("> 全程等分为10段，坡度为段内最陡处推算值，不等于实地路况\n")
+    lines.append("| 分段 | 最陡坡度 | 路况提示 |")
     lines.append("|---|---|---|")
     for seg in slope_segment_list:
-        lines.append(f"| {seg['index']} | {seg['slope']}% | {seg['desc']} |")
+        lines.append(f"| 第 {seg['segment']} 段 | {seg['slope']}% | {seg['desc']} |")
     lines.append("\n")
 
     lines.append("---\n")
