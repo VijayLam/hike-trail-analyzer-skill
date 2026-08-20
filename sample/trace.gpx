@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 占位文件：请将真实的GPX轨迹文件替换本文件，命名为 trace.gpx -->
+<gpx version="1.1" creator="hike-gpx-analyzer-skill" xmlns="http://www.topografix.com/GPX/1/1">
+    <trk>
+        <name>placeholder</name>
+        <trkseg>
+        </trkseg>
+    </trk>
+</gpx>
