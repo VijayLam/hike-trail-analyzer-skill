@@ -2,6 +2,7 @@
 hike-gpx-analyzer-skill · open-meteo气象数据模块
 Author: Vijay
 """
+import sys
 import requests
 from datetime import datetime
 from typing import Optional, Dict
@@ -36,7 +37,7 @@ def fetch_point_weather(lat: float, lon: float, target_time: datetime) -> Option
             "risk": risk_note
         }
     except Exception as e:
-        print("天气获取异常：", str(e))
+        print("天气获取异常：", str(e), file=sys.stderr)
         return None
 
 def map_weather_code(code: int):
@@ -46,7 +47,7 @@ def map_weather_code(code: int):
         return "多云"
     elif 45 <= code <=48:
         return "有雾"
-    elif 51 <= code <=67:
+    elif 51 <= code <= 67 or 80 <= code <= 82:
         return "降雨"
     else:
         return "天气状况未知"

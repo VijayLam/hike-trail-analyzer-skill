@@ -2,6 +2,7 @@
 hike-gpx-analyzer-skill · 主入口
 Author: Vijay
 """
+import sys
 from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis,compute_cumulative_km,extract_waypoints,find_service_points
 from weather_provider import fetch_point_weather
 from report_builder import build_markdown_report
@@ -38,9 +39,20 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
 
     md_output=build_markdown_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime,service_points)
     print(md_output)
-    print("\n✅以上为完整分析报告，可直接复制使用")
     return {"markdown":md_output,"statistic":stat}
 
+def parse_start_datetime(date_arg:str,time_arg:str=None):
+    start=datetime.strptime(date_arg,"%Y-%m-%d")
+    if time_arg:
+        start=datetime.combine(start.date(),datetime.strptime(time_arg,"%H:%M").time())
+    else:
+        start+=timedelta(hours=DEFAULT_START_HOUR)
+    return start
+
 if __name__=="__main__":
-    res=run_hike_analysis("./sample/trace.gpx",route_name="测试徒步路线")
-    print(res["statistic"])
+    if len(sys.argv)<2:
+        print("用法: python main.py <gpx文件路径> [路线名称] [出发日期YYYY-MM-DD] [出发时刻HH:MM]",file=sys.stderr)
+        sys.exit(1)
+    route_name=sys.argv[2] if len(sys.argv)>2 else "未命名路线"
+    start_datetime=parse_start_datetime(sys.argv[3],sys.argv[4] if len(sys.argv)>4 else None) if len(sys.argv)>3 else None
+    run_hike_analysis(sys.argv[1],route_name=route_name,start_datetime=start_datetime)

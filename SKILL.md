@@ -1,0 +1,32 @@
+---
+name: hike-gpx-analyzer
+description: 徒步GPX轨迹分析：导入GPX文件自动生成专业徒步出行分析Markdown报告，含路线总览KPI（里程/爬升/海拔/预估用时/难度）、沿途气象预估、分段坡度路况、卫生间与补给点、风险提示与装备建议。当用户提供GPX文件并要求分析徒步路线、生成徒步/出行报告、评估路线难度时使用。Use when the user provides a GPX file and asks for hiking route analysis or a trip planning report.
+---
+
+# 徒步GPX轨迹出行分析
+
+## 工作流程
+
+1. 在项目根目录运行分析（依赖已装在 .venv；缺失时先 `pip install -r requirements.txt`）：
+
+```bash
+.venv/bin/python main.py <GPX文件路径> "<路线名称>" [YYYY-MM-DD] [HH:MM]
+```
+
+- 路线名称：用户指定；未指定时从GPX文件名推断，推断困难时询问用户
+- 出发日期与时刻：可选，默认明天 09:00
+- stdout 输出即完整Markdown报告（stderr 为运行日志，不属于报告）
+
+2. 气象个别点位获取失败属正常降级（表格对应行自动跳过），无需重试；仅当 stdout 中气象表整表为空时，向用户说明网络异常并建议重跑。
+
+## 输出规范（必须遵守）
+
+将 stdout 的报告**原文完整**包裹在 ```markdown 代码块中直接输出到聊天界面，供用户一键复制：
+
+- **强制直接输出到聊天界面**：任何情况下都不将报告写入、保存或生成单独的文件，一律以聊天消息中的代码块交付；用户要求文件时，也只在聊天界面输出代码块让其自行复制
+- 报告内容一字不改、不截断、不增删——报告本身已是最终交付格式
+- 代码块外不附加分析解读，最多一句简短说明（如气象降级提示）
+
+## 可调参数
+
+settings.py：坡度分段数 SEGMENT_COUNT、采样点数、三档行进速度、卫生间/补给关键词。
