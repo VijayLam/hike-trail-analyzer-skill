@@ -2,10 +2,10 @@
 hike-gpx-analyzer-skill · 主入口
 Author: Vijay
 """
-from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis
+from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis,compute_cumulative_km,extract_waypoints,find_service_points
 from weather_provider import fetch_point_weather
 from report_builder import build_markdown_report
-from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SEGMENT_COUNT,SLOPE_SAMPLE_STEP
+from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SEGMENT_COUNT,SLOPE_SAMPLE_STEP,TOILET_KEYWORDS,SUPPLY_KEYWORDS
 from datetime import datetime,timedelta
 
 def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_datetime:datetime=None):
@@ -18,6 +18,8 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
     all_points=extract_all_track_points(gpx)
     key_points=sample_way_points(all_points,SAMPLE_KEY_POINT_COUNT)
     slope_segs=segment_slope_analysis(all_points,SEGMENT_COUNT,SLOPE_SAMPLE_STEP)
+    cum_km=compute_cumulative_km(all_points)
+    service_points=find_service_points(extract_waypoints(gpx),all_points,cum_km,TOILET_KEYWORDS,SUPPLY_KEYWORDS)
     total_km=stat["total_distance_km"]
 
     time_est={
@@ -34,7 +36,7 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
         w_data=fetch_point_weather(pt["lat"],pt["lon"],arrive_dt)
         weather_result.append(w_data)
 
-    md_output=build_markdown_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime)
+    md_output=build_markdown_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime,service_points)
     print(md_output)
     print("\n✅以上为完整分析报告，可直接复制使用")
     return {"markdown":md_output,"statistic":stat}

@@ -50,14 +50,56 @@ def sample_way_points(points: List[Dict], sample_count: int):
             break
     return result
 
+def compute_cumulative_km(points: List[Dict]):
+    cum_km=[0.0]
+    for k in range(1,len(points)):
+        d=haversine_distance(points[k-1]["lat"],points[k-1]["lon"],points[k]["lat"],points[k]["lon"])
+        cum_km.append(cum_km[-1]+d/1000)
+    return cum_km
+
+def extract_waypoints(gpx) -> List[Dict]:
+    result=[]
+    for w in gpx.waypoints:
+        name=(w.name or "").strip()
+        if not name:
+            continue
+        result.append({"name":name,"lat":w.latitude,"lon":w.longitude})
+    return result
+
+def find_service_points(waypoints: List[Dict],points: List[Dict],cum_km: List[float],toilet_keywords: List[str],supply_keywords: List[str]):
+    result=[]
+    seen=set()
+    for w in waypoints:
+        key=(w["name"],round(w["lat"],5),round(w["lon"],5))
+        if key in seen:
+            continue
+        seen.add(key)
+        name_lower=w["name"].lower()
+        if any(kw in name_lower for kw in toilet_keywords):
+            wtype="🚻卫生间"
+        elif any(kw in name_lower for kw in supply_keywords):
+            wtype="🏪补给"
+        else:
+            continue
+        result.append({"km":round(nearest_track_km(w,points,cum_km)),"name":w["name"],"type":wtype})
+    result.sort(key=lambda g:g["km"])
+    return result
+
+def nearest_track_km(wpt: Dict,points: List[Dict],cum_km: List[float]):
+    best_i=0
+    best_d=float("inf")
+    for i,p in enumerate(points):
+        d=haversine_distance(wpt["lat"],wpt["lon"],p["lat"],p["lon"])
+        if d<best_d:
+            best_d=d
+            best_i=i
+    return cum_km[best_i]
+
 def segment_slope_analysis(points: List[Dict], segment_count: int, sample_step: int):
     total = len(points)
     if total < 2:
         return []
-    cum_km = [0.0]
-    for k in range(1, total):
-        d = haversine_distance(points[k - 1]["lat"], points[k - 1]["lon"], points[k]["lat"], points[k]["lon"])
-        cum_km.append(cum_km[-1] + d / 1000)
+    cum_km = compute_cumulative_km(points)
     seg_km = cum_km[-1] / segment_count
     output = []
     for i in range(1, segment_count + 1):

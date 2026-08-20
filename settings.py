@@ -11,3 +11,5 @@ SAMPLE_KEY_POINT_COUNT = 5
 TIME_ZONE = "Asia/Shanghai"
 SEGMENT_COUNT = 6
 SLOPE_SAMPLE_STEP = 12
+TOILET_KEYWORDS = ["厕所","卫生间","洗手间","公厕","wc","toilet"]
+SUPPLY_KEYWORDS = ["补给","驿站","便利店","商店","小卖部","士多","超市","买水","补水","水站","售货机","贩卖机","餐厅","饭店","农家乐","水果","凉茶"]
