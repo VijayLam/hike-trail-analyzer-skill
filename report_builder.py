@@ -51,7 +51,7 @@ def build_markdown_report(route_name:str,stat:dict,waypoint_weather:list,slope_s
 
     lines.append("---\n")
     lines.append("## 🛤分段路况坡度参考（轨迹数据推算，仅供参考）")
-    lines.append("> 按全程里程等分10段，坡度为段内最陡处推算值，不等于实地路况\n")
+    lines.append(f"> 按全程里程等分{len(slope_segment_list)}段，坡度为段内最陡处推算值，不等于实地路况\n")
     lines.append("| 里程区间 | 最陡坡度 | 路况提示 |")
     lines.append("|---|---|---|")
     for seg in slope_segment_list:

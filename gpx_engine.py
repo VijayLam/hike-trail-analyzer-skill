@@ -4,6 +4,7 @@ Author: Vijay
 """
 import gpxpy
 import gpxpy.gpx
+from bisect import bisect_left
 from gpxpy.geo import haversine_distance
 from typing import List, Dict
 
@@ -57,11 +58,11 @@ def segment_slope_analysis(points: List[Dict], segment_count: int, sample_step: 
     for k in range(1, total):
         d = haversine_distance(points[k - 1]["lat"], points[k - 1]["lon"], points[k]["lat"], points[k]["lon"])
         cum_km.append(cum_km[-1] + d / 1000)
-    step = total / segment_count
+    seg_km = cum_km[-1] / segment_count
     output = []
     for i in range(1, segment_count + 1):
-        seg_start = min(int((i - 1) * step), total - 1)
-        seg_end = min(int(i * step), total - 1)
+        seg_start = min(bisect_left(cum_km, (i - 1) * seg_km), total - 1)
+        seg_end = min(bisect_left(cum_km, i * seg_km), total - 1)
         max_slope = 0.0
         for j in range(seg_start, seg_end, sample_step):
             p0 = points[j]
