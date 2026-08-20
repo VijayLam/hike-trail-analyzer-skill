@@ -76,21 +76,21 @@ def segment_slope_analysis(points: List[Dict], segment_count: int, sample_step: 
             slope = delta_h / dist_m * 100
             if abs(slope) > abs(max_slope):
                 max_slope = slope
+        slope_int = round(max_slope)
         output.append({
-            "range": f"{cum_km[seg_start]:.1f}～{cum_km[seg_end]:.1f} km",
-            "slope": round(max_slope, 2),
-            "desc": get_slope_description(max_slope)
+            "range": f"{round(cum_km[seg_start])}～{round(cum_km[seg_end])} km",
+            "slope": slope_int,
+            "desc": get_slope_description(slope_int)
         })
     return output
 
 def get_slope_description(slope: float):
-    if slope < -15:
-        return "陡坡下行，容易打滑，注意控制步伐"
-    elif slope < -6:
-        return "缓下坡路段，留意脚下碎石"
-    elif slope <= 6:
+    s=abs(slope)
+    if s<30:
         return "平缓路段，行进较为轻松"
-    elif slope <=15:
-        return "缓上坡，持续消耗体力"
+    elif s<40:
+        return "小爬升，保持节奏" if slope>0 else "小下降，留意脚下"
+    elif s<50:
+        return "较陡上坡，体力消耗较大" if slope>0 else "较陡下坡，控制步伐防滑"
     else:
-        return "较陡上坡，体力消耗较大"
+        return "陡坡急升，量力而行" if slope>0 else "陡坡急降，易打滑，谨慎慢行"
