@@ -4,6 +4,7 @@ Author: Vijay
 """
 import gpxpy
 import gpxpy.gpx
+from gpxpy.geo import haversine_distance
 from typing import List, Dict
 
 def load_gpx(file_path: str):
@@ -26,11 +27,12 @@ def extract_all_track_points(gpx) -> List[Dict]:
 
 def get_basic_statistic(gpx):
     moving = gpx.get_moving_data()
+    updown = gpx.get_uphill_downhill()
     elev_ext = gpx.get_elevation_extremes()
     return {
         "total_distance_km": round(moving.moving_distance / 1000, 1),
-        "uphill_m": int(moving.uphill),
-        "downhill_m": int(moving.downhill),
+        "uphill_m": int(updown.uphill),
+        "downhill_m": int(updown.downhill),
         "max_elevation": int(elev_ext.maximum if elev_ext.maximum else 0),
         "min_elevation": int(elev_ext.minimum if elev_ext.minimum else 0)
     }
@@ -53,7 +55,7 @@ def segment_slope_analysis(points: List[Dict], interval: int):
         p0 = points[i - interval]
         p1 = points[i]
         delta_h = p1["elevation"] - p0["elevation"]
-        dist_m = 1000
+        dist_m = haversine_distance(p0["lat"], p0["lon"], p1["lat"], p1["lon"])
         if dist_m <= 0:
             slope_percent = 0
         else:
