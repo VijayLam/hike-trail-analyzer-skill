@@ -53,6 +53,10 @@ def segment_slope_analysis(points: List[Dict], segment_count: int, sample_step: 
     total = len(points)
     if total < 2:
         return []
+    cum_km = [0.0]
+    for k in range(1, total):
+        d = haversine_distance(points[k - 1]["lat"], points[k - 1]["lon"], points[k]["lat"], points[k]["lon"])
+        cum_km.append(cum_km[-1] + d / 1000)
     step = total / segment_count
     output = []
     for i in range(1, segment_count + 1):
@@ -72,7 +76,7 @@ def segment_slope_analysis(points: List[Dict], segment_count: int, sample_step: 
             if abs(slope) > abs(max_slope):
                 max_slope = slope
         output.append({
-            "segment": i,
+            "range": f"{cum_km[seg_start]:.1f}～{cum_km[seg_end]:.1f} km",
             "slope": round(max_slope, 2),
             "desc": get_slope_description(max_slope)
         })
