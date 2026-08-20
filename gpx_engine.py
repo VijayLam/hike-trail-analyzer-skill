@@ -66,18 +66,24 @@ def extract_waypoints(gpx) -> List[Dict]:
         result.append({"name":name,"lat":w.latitude,"lon":w.longitude})
     return result
 
-def find_meeting_point(waypoints: List[Dict], start_point: Dict, max_distance_m: float = 500):
+def is_valid_meeting_name(name:str,invalid_keywords:List[str],invalid_exact:List[str]):
+    if len(name)<2 or name in invalid_exact:
+        return False
+    lower=name.lower()
+    return not any(kw in lower for kw in invalid_keywords)
+
+def find_meeting_point(waypoints: List[Dict], start_point: Dict, invalid_keywords: List[str], invalid_exact: List[str], max_distance_m: float = 500):
     best_name=None
     best_d=max_distance_m
     for w in waypoints:
         d=haversine_distance(w["lat"],w["lon"],start_point["lat"],start_point["lon"])
-        if d<best_d:
+        if d<best_d and is_valid_meeting_name(w["name"],invalid_keywords,invalid_exact):
             best_d=d
             best_name=w["name"]
     coord=f"（{start_point['lat']:.5f}, {start_point['lon']:.5f}）"
     if best_name:
         return f"{best_name}{coord}"
-    return f"轨迹起点{coord}"
+    return f"待定{coord}"
 
 def find_service_points(waypoints: List[Dict],points: List[Dict],cum_km: List[float],toilet_keywords: List[str],supply_keywords: List[str]):
     result=[]

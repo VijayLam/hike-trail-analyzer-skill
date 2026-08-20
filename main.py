@@ -6,7 +6,7 @@ import sys
 from gpx_engine import load_gpx,extract_all_track_points,get_basic_statistic,sample_way_points,segment_slope_analysis,compute_cumulative_km,extract_waypoints,find_service_points,find_meeting_point
 from weather_provider import fetch_point_weather
 from report_builder import build_report
-from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SEGMENT_COUNT,SLOPE_SAMPLE_STEP,TOILET_KEYWORDS,SUPPLY_KEYWORDS
+from settings import DEFAULT_START_HOUR,SPEED_LEISURE_KMH,SPEED_NORMAL_KMH,SPEED_FAST_KMH,SAMPLE_KEY_POINT_COUNT,SEGMENT_COUNT,SLOPE_SAMPLE_STEP,TOILET_KEYWORDS,SUPPLY_KEYWORDS,INVALID_MEETING_KEYWORDS,INVALID_MEETING_EXACT
 from datetime import datetime,timedelta
 
 def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_datetime:datetime=None):
@@ -22,7 +22,7 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
     cum_km=compute_cumulative_km(all_points)
     waypoints=extract_waypoints(gpx)
     service_points=find_service_points(waypoints,all_points,cum_km,TOILET_KEYWORDS,SUPPLY_KEYWORDS)
-    meeting_point=find_meeting_point(waypoints,all_points[0])
+    meeting_point=find_meeting_point(waypoints,all_points[0],INVALID_MEETING_KEYWORDS,INVALID_MEETING_EXACT)
     total_km=stat["total_distance_km"]
 
     time_est={
@@ -40,7 +40,7 @@ def run_hike_analysis(gpx_file_path:str,route_name:str="未命名路线",start_d
         w_data=fetch_point_weather(pt["lat"],pt["lon"],arrive_dt)
         weather_result.append(w_data)
 
-    md_output=build_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime,service_points,meeting_point)
+    md_output=build_report(route_name,stat,weather_result,slope_segs,time_est,start_datetime,service_points,meeting_point,max((abs(seg["slope"]) for seg in slope_segs),default=0))
     print(md_output)
     return {"markdown":md_output,"statistic":stat}
 

@@ -2,8 +2,88 @@
 hike-gpx-analyzer-skill · 纯文本专业报告生成器
 Author: Vijay
 """
+import math
 import unicodedata
 from datetime import datetime
+
+KM_TO_MI=0.621371
+M_TO_FT=3.28084
+TECH_LEVELS={"T1":10,"T2":25,"T3":45,"T4":65,"T5":85,"T6":100}
+
+def get_slope_factor(avg_slope_pct:float):
+    if avg_slope_pct<5: return 1.00
+    elif avg_slope_pct<10: return 1.05
+    elif avg_slope_pct<15: return 1.10
+    elif avg_slope_pct<20: return 1.20
+    elif avg_slope_pct<30: return 1.30
+    else: return 1.45
+
+def get_altitude_factor(max_elev_m:int):
+    if max_elev_m<1500: return 1.00
+    elif max_elev_m<2000: return 1.03
+    elif max_elev_m<2500: return 1.06
+    elif max_elev_m<3000: return 1.10
+    elif max_elev_m<3500: return 1.15
+    elif max_elev_m<4000: return 1.22
+    else: return 1.30
+
+def infer_tech_level(steepest_slope_pct:float):
+    s=abs(steepest_slope_pct)
+    if s<10: return "T1"
+    elif s<25: return "T2"
+    elif s<40: return "T3"
+    elif s<55: return "T4"
+    elif s<70: return "T5"
+    else: return "T6"
+
+def get_difficulty_level(score:int):
+    if score<=20: return "休闲"
+    elif score<=40: return "简单"
+    elif score<=60: return "中等"
+    elif score<=75: return "较难"
+    elif score<=90: return "困难"
+    else: return "极难"
+
+def assess_difficulty(stat:dict,steepest_slope_pct:float,tech_level:str=None):
+    dist_km=stat["total_distance_km"]
+    uphill_m=stat["uphill_m"]
+    max_elev_m=stat["max_elevation"]
+    dist_mi=dist_km*KM_TO_MI
+    uphill_ft=uphill_m*M_TO_FT
+    load=math.sqrt(2*dist_mi*uphill_ft)
+    base_score=min(100,load/1.2)
+    avg_slope=uphill_m/(dist_km*1000)*100 if dist_km>0 else 0
+    slope_f=get_slope_factor(avg_slope)
+    alt_f=get_altitude_factor(max_elev_m)
+    tech=tech_level if tech_level in TECH_LEVELS else infer_tech_level(steepest_slope_pct)
+    tech_score=TECH_LEVELS[tech]
+    score=min(100,round(base_score*slope_f*alt_f*0.8+tech_score*0.2))
+    if tech_score>=90:
+        score=max(score,85)
+    elif tech_score>=80:
+        score=max(score,75)
+    physical_part=base_score*slope_f*alt_f*0.8
+    contributions=[
+        ("累计爬升",physical_part*0.5),
+        ("全程里程",physical_part*0.5),
+        ("坡度修正",base_score*(slope_f-1)*alt_f*0.8),
+        ("海拔修正",base_score*slope_f*(alt_f-1)*0.8),
+        ("技术难度",tech_score*0.2),
+    ]
+    contributions.sort(key=lambda x:x[1],reverse=True)
+    return {
+        "dist_km":dist_km,"uphill_m":uphill_m,"max_elev_m":max_elev_m,"avg_slope":avg_slope,
+        "dist_mi":dist_mi,"uphill_ft":uphill_ft,"load":load,"base_score":base_score,
+        "slope_f":slope_f,"alt_f":alt_f,"tech":tech,"tech_score":tech_score,
+        "steepest":steepest_slope_pct,"score":score,"level":get_difficulty_level(score),
+        "top3":[c for c in contributions if c[1]>0][:3],
+    }
+
+def build_difficulty_lines(a:dict):
+    return [
+        f"📊整体难度：{a['score']}分 ｜ {a['level']}",
+        "主要影响因素：" + "、".join(f"{name}（贡献约{v:.0f}分）" for name,v in a["top3"]),
+    ]
 
 def _display_width(text:str):
     return sum(2 if unicodedata.east_asian_width(c) in "FW" else 1 for c in text)
@@ -34,7 +114,7 @@ def render_table(headers:list,rows:list):
         return "".join(parts)
     return [render_row(r) for r in all_rows]
 
-def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_list:list,time_estimate:dict,start_datetime:datetime=None,service_points:list=None,meeting_point:str=None):
+def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_list:list,time_estimate:dict,start_datetime:datetime=None,service_points:list=None,meeting_point:str=None,steepest_slope:float=0):
     date_text=None
     if start_datetime is not None:
         week_day="周"+"一二三四五六日"[start_datetime.weekday()]
@@ -54,9 +134,8 @@ def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_li
     lines.append(f"最高海拔：{stat['max_elevation']} m")
     lines.append(f"最低海拔：{stat['min_elevation']} m")
     lines.append(f"⏱预估用时：休闲 {time_estimate['leisure']} ｜ 正常 {time_estimate['normal']} ｜ 较快 {time_estimate['fast']}")
-    diff_pct,level_text,diff_formula=get_difficulty_text(stat["total_distance_km"],stat["uphill_m"])
-    lines.append(f"📊整体难度：{diff_pct}% ｜ {level_text}")
-    lines.append(f"{diff_formula}\n")
+    lines+=build_difficulty_lines(assess_difficulty(stat,steepest_slope))
+    lines.append("")
 
     lines.append("🌤沿途气象预估")
     lines.append("按预估到达时刻逐点查询，未指定出行日期时默认明天出发，可自定义出发时间重新测算；山区小气候变化较快，仅作规划参考\n")
@@ -100,17 +179,3 @@ def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_li
     lines.append("📝本报告由 Vijay 开发的 hike-gpx-analyzer-skill 自动生成")
 
     return "\n".join(lines)
-
-def get_difficulty_text(distance:float,uphill:int):
-    eff_km=distance+uphill/100
-    diff_pct=min(100,round(eff_km/25*100))
-    if eff_km<6:
-        level="轻松，适合大多数出行人员"
-    elif eff_km<12:
-        level="中等，需要一定徒步体能基础"
-    elif eff_km<18:
-        level="较高，对体能有一定要求，请评估自身状态"
-    else:
-        level="挑战级，适合有经验的徒步队伍，请做好充分准备"
-    formula="测算公式：难度 =（里程km + 累计爬升m÷100）÷ 25km × 100%"
-    return diff_pct,level,formula
