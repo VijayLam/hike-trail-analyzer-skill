@@ -85,6 +85,20 @@ def build_difficulty_lines(a:dict):
         "主要影响因素：" + "、".join(f"{name}（贡献约{v:.0f}分）" for name,v in a["top3"]),
     ]
 
+def estimate_water_liters(stat:dict,temps:list):
+    if not temps:
+        return None
+    max_t=max(temps)
+    duration_h=stat["total_distance_km"]/4+stat["uphill_m"]/600
+    rate=0.7 if max_t>=32 else (0.6 if max_t>=28 else (0.4 if max_t<10 else 0.5))
+    total=duration_h*rate
+    lo=max(0.5,round(total*0.85*2)/2)
+    hi=max(lo+0.5,round(total*1.15*2)/2)
+    lo=min(lo,5.5)
+    hi=min(hi,6)
+    fmt=lambda v:f"{v:g}"
+    return f"{fmt(lo)}～{fmt(hi)}L"
+
 def _display_width(text:str):
     return sum(2 if unicodedata.east_asian_width(c) in "FW" else 1 for c in text)
 
@@ -170,8 +184,21 @@ def build_report(route_name:str,stat:dict,waypoint_weather:list,slope_segment_li
     for i,t in enumerate(tips,1):
         lines.append(f"{i}. {t}")
     lines.append("🎒装备清单")
-    lines.append("✅必备：防滑徒步鞋、登山杖、头灯、足量饮用水、路餐、防晒用品")
-    lines.append("🟡可选：简易净水工具、急救包、便携雨具、充电宝\n")
+    temps=[w["temp_c"] for w in waypoint_weather if w and w.get("temp_c") is not None]
+    max_t=max(temps) if temps else None
+    month=start_datetime.month if start_datetime else None
+    summer=(max_t>=28) if max_t is not None else (month in (6,7,8,9) if month else False)
+    water_text=estimate_water_liters(stat,temps)
+    gear_water=f"饮用水{water_text}" if water_text else "足量饮用水"
+    lines.append(f"✅必备：防滑徒步鞋、登山杖、头灯、{gear_water}、路餐、防晒用品")
+    optional_gear=["简易净水工具","急救包","便携雨具","充电宝"]
+    if summer:
+        optional_gear=["电解质饮料","盐丸","驱蚊水"]+optional_gear
+    lines.append("🟡可选："+"、".join(optional_gear))
+    supply_count=len([s for s in (service_points or []) if s["type"]=="🏪补给"])
+    if water_text and supply_count:
+        lines.append(f"📌饮水量已按当日气温测算，沿途另有 {supply_count} 处补给点，可规划中途补水、按需减负")
+    lines.append("")
 
     lines.append("⚠免责声明")
     lines.append("1. 路况结果仅由GPX轨迹海拔数据自动推算，无法识别实地路面情况，只可作为出行规划参考。")

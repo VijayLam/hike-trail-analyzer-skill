@@ -22,6 +22,7 @@ def fetch_point_weather(lat: float, lon: float, target_time: datetime) -> Option
         hourly = data["hourly"]
         time_arr = hourly["time"]
         rain_prob_arr = hourly["precipitation_probability"]
+        temp_arr = hourly["temperature_2m"]
         code_arr = hourly["weather_code"]
         target_str = target_time.strftime("%Y-%m-%dT%H:00")
         try:
@@ -31,10 +32,12 @@ def fetch_point_weather(lat: float, lon: float, target_time: datetime) -> Option
         w_code = code_arr[pos]
         weather_text = map_weather_code(w_code)
         rain_p = rain_prob_arr[pos]
+        temp_c = temp_arr[pos]
         risk_note = build_risk_note(rain_p)
         return {
             "arrive_hm": target_time.strftime("%H:%M"),
             "weather": weather_text,
+            "temp_c": round(temp_c) if temp_c is not None else None,
             "rain_prob": f"{rain_p}%",
             "risk": risk_note
         }
