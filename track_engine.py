@@ -8,7 +8,8 @@ import gpxpy
 import gpxpy.gpx
 from bisect import bisect_left
 from gpxpy.geo import haversine_distance
-from typing import List, Dict
+from typing import List, Dict, Optional
+from settings import SLOPE_SMOOTH_WINDOW, SLOPE_RESAMPLE_INTERVAL_M, SUSTAINED_GRADE_WINDOW_M
 
 KML_NS = {"kml": "http://www.opengis.net/kml/2.2"}
 
@@ -215,6 +216,47 @@ def nearest_track_km(wpt: Dict,points: List[Dict],cum_km: List[float]):
             best_d=d
             best_i=i
     return cum_km[best_i]
+
+def compute_sustained_grade_p95(points: List[Dict], smooth_window: int = SLOPE_SMOOTH_WINDOW,
+                                resample_interval_m: float = SLOPE_RESAMPLE_INTERVAL_M,
+                                window_m: float = SUSTAINED_GRADE_WINDOW_M) -> Optional[float]:
+    """计算平滑海拔下连续窗口的上坡 P95，避免瞬时异常坡度拉高总分。"""
+    if len(points) < 2:
+        return None
+    cumulative_km = compute_cumulative_km(points)
+    if cumulative_km[-1] <= 0:
+        return None
+    half = max(0, smooth_window // 2)
+    elevations = []
+    for i in range(len(points)):
+        lo = max(0, i - half)
+        hi = min(len(points), i + half + 1)
+        elevations.append(sum(points[j]["elevation"] for j in range(lo, hi)) / (hi - lo))
+
+    sample_targets = [i * resample_interval_m / 1000 for i in range(int(cumulative_km[-1] * 1000 / resample_interval_m) + 1)]
+    samples = []
+    for target_km in sample_targets:
+        index = min(range(len(cumulative_km)), key=lambda i: abs(cumulative_km[i] - target_km))
+        if not samples or index != samples[-1][0]:
+            samples.append((index, cumulative_km[index], elevations[index]))
+    if len(samples) < 2:
+        return None
+
+    grades = []
+    for i, (_, start_km, start_elevation) in enumerate(samples[:-1]):
+        target_km = start_km + window_m / 1000
+        end_index = min(range(i + 1, len(samples)), key=lambda j: abs(samples[j][1] - target_km))
+        end_km, end_elevation = samples[end_index][1], samples[end_index][2]
+        distance_m = (end_km - start_km) * 1000
+        if distance_m > 0:
+            grade = (end_elevation - start_elevation) / distance_m * 100
+            if grade > 0:
+                grades.append(grade)
+    if not grades:
+        return 0.0
+    grades.sort()
+    return grades[min(len(grades) - 1, int((len(grades) - 1) * 0.95))]
+
 
 def segment_slope_analysis(points: List[Dict], segment_count: int, sample_step: int):
     total = len(points)
